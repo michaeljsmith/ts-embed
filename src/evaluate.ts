@@ -13,12 +13,15 @@ function evaluateReference<T>(expression: ReferenceExpression<T>, environment: u
   return environment[expression.argumentKey] as T;
 }
 
-function evaluateCall<I, O>(expression: CallExpression<I, O>, environment: unknown[]): O {
-  const fn = evaluate(expression.fnExpression, environment);
-  const arg = evaluate(expression.argExpression, environment);
-  const newEnvironment = Object.create(fn.environment) as unknown[];
-  newEnvironment[fn.argumentKey] = arg;
-  return evaluate(fn.expression as Expression<O>, newEnvironment);
+function evaluateCall<I, O>(expression: CallExpression<O>, environment: unknown[]): O {
+  return expression.visit(
+    (fnExpression, argExpression) => {
+      const fn = evaluate(fnExpression, environment);
+      const arg = evaluate(argExpression, environment);
+      const newEnvironment = Object.create(fn.environment) as unknown[];
+      newEnvironment[fn.argumentKey] = arg;
+      return evaluate(fn.expression as Expression<O>, newEnvironment);
+    });
 }
 
 function evaluateLiteral<T>(expression: LiteralExpression<T>): T {
